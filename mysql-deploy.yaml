@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: blueassemble/0905:mysql-ver9 # 한글화 해서 패키지 한 DB
+        name: mysql
+#        securityContext:                    #nfs 사용할때 넣기
+#          runAsUser: 1001                   #nfs 사용할때 넣기
+#          allowPrivilegeEscalation: false   #nfs 사용할때 넣기
+        env:
+           - name: MYSQL_ROOT_PASSWORD
+             valueFrom:
+               secretKeyRef:
+                 name: mysql-secret
+                 key: rootpass
+           - name: MYSQL_DATABASE 
+             value: blue
+           - name: MYSQL_USER
+             value: mysql
+           - name: MYSQL_ROOT_HOST
+             value: '%'  
+           - name: MYSQL_PASSWORD
+             valueFrom:
+               secretKeyRef:
+                 name: mysql-secret
+                 key: userpass
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+          - mountPath: "/var/lib/mysql"
+            name: mysql-pv-pd
+      volumes:
+        - name: mysql-pv-pd
+          persistentVolumeClaim:
+            claimName: mysql-pvc-pd #NFS:nfs-mysql-pvc // PERSISTENT DISK:mysql-pvc-pd // filestore:filestore-mysql-pvc
+        
+
+
+
+
+
